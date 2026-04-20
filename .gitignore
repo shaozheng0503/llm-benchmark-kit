@@ -1,0 +1,44 @@
+# Env / secrets
+.env
+.env.local
+*.key
+*.pem
+secrets.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+build/
+dist/
+*.egg
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Reports & runtime data (user-generated)
+reports/*/
+!reports/.gitkeep
+data/raw/
+data/processed/
+*.log
+
+# IDE / OS
+.idea/
+.vscode/
+.cursor/
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Misc
+*.zip
+*.tar.gz
