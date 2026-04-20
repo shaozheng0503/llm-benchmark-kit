@@ -12,19 +12,18 @@
 报告输出: ${LLM_REPORT_DIR:-reports}/legacy_basic/
 """
 
-import os
-import sys
-import json
-import time
 import base64
+import json
+import os
 import re
-from datetime import datetime
-from dataclasses import dataclass, asdict
+import sys
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import asdict, dataclass
+from datetime import datetime
 from pathlib import Path
 
 from openai import OpenAI
-
 
 BASE_URL = os.getenv("LLM_API_BASE", "").rstrip("/")
 API_KEY = os.getenv("LLM_API_KEY", "")
@@ -67,7 +66,10 @@ MATH_REASONING_PROMPT = """请详细推理以下数学问题：
 """
 MULTI_TURN_MESSAGES = [
     {"role": "user", "content": "我想学习 Python，你能帮我制定一个学习计划吗？"},
-    {"role": "assistant", "content": "当然可以！以下是一个 Python 学习计划的框架：\n1. 基础语法\n2. 数据结构\n3. 面向对象编程\n4. 常用库\n5. 项目实践"},
+    {
+        "role": "assistant",
+        "content": "当然可以！以下是一个 Python 学习计划的框架：\n1. 基础语法\n2. 数据结构\n3. 面向对象编程\n4. 常用库\n5. 项目实践",
+    },
     {"role": "user", "content": "我有一些 JavaScript 的基础，想转学 Python。请重点讲讲主要区别。"},
 ]
 IMAGE_GEN_PROMPT = "Generate a simple illustration of a cute cat sitting on a stack of books, digital art style."
@@ -178,22 +180,33 @@ class APITester:
             return []
 
     def test_basic_chat(self, model):
-        self._record(model["id"], "基础对话",
-                     self._call_chat(model["id"], [{"role": "user", "content": BASIC_PROMPT}], max_tokens=256))
+        self._record(
+            model["id"],
+            "基础对话",
+            self._call_chat(model["id"], [{"role": "user", "content": BASIC_PROMPT}], max_tokens=256),
+        )
 
     def test_code_generation(self, model):
-        self._record(model["id"], "代码生成",
-                     self._call_chat(model["id"], [{"role": "user", "content": CODE_PROMPT}], max_tokens=1024))
+        self._record(
+            model["id"],
+            "代码生成",
+            self._call_chat(model["id"], [{"role": "user", "content": CODE_PROMPT}], max_tokens=1024),
+        )
 
     def test_multi_turn(self, model):
-        self._record(model["id"], "多轮对话",
-                     self._call_chat(model["id"], MULTI_TURN_MESSAGES, max_tokens=512))
+        self._record(model["id"], "多轮对话", self._call_chat(model["id"], MULTI_TURN_MESSAGES, max_tokens=512))
 
     def test_reasoning(self, model):
-        self._record(model["id"], "逻辑推理(过河问题)",
-                     self._call_chat(model["id"], [{"role": "user", "content": REASONING_PROMPT}], max_tokens=2048))
-        self._record(model["id"], "数学推理(求根)",
-                     self._call_chat(model["id"], [{"role": "user", "content": MATH_REASONING_PROMPT}], max_tokens=2048))
+        self._record(
+            model["id"],
+            "逻辑推理(过河问题)",
+            self._call_chat(model["id"], [{"role": "user", "content": REASONING_PROMPT}], max_tokens=2048),
+        )
+        self._record(
+            model["id"],
+            "数学推理(求根)",
+            self._call_chat(model["id"], [{"role": "user", "content": MATH_REASONING_PROMPT}], max_tokens=2048),
+        )
 
     def test_image_generation(self, model):
         model_id = model["id"]
@@ -206,7 +219,7 @@ class APITester:
             content = result.get("content", "")
             if "base64" in content.lower() or content.startswith("data:image"):
                 try:
-                    b64_match = re.search(r'(?:data:image/\w+;base64,)?([A-Za-z0-9+/=]{100,})', content)
+                    b64_match = re.search(r"(?:data:image/\w+;base64,)?([A-Za-z0-9+/=]{100,})", content)
                     if b64_match:
                         img_data = base64.b64decode(b64_match.group(1))
                         image_path = str(REPORT_DIR / f"generated_{model_id.replace('/', '_')}.png")
@@ -230,19 +243,38 @@ class APITester:
                     path2 = str(REPORT_DIR / f"generated_api_{model_id.replace('/', '_')}.png")
                     with open(path2, "wb") as f:
                         f.write(base64.b64decode(img_b64))
-                self._record(model_id, "Images API 生成", {
-                    "success": True, "latency_ms": round(latency, 2),
-                    "content": image_info, "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0,
-                })
+                self._record(
+                    model_id,
+                    "Images API 生成",
+                    {
+                        "success": True,
+                        "latency_ms": round(latency, 2),
+                        "content": image_info,
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": 0,
+                    },
+                )
             else:
-                self._record(model_id, "Images API 生成", {
-                    "success": False, "latency_ms": round(latency, 2), "error": "No image data returned",
-                })
+                self._record(
+                    model_id,
+                    "Images API 生成",
+                    {
+                        "success": False,
+                        "latency_ms": round(latency, 2),
+                        "error": "No image data returned",
+                    },
+                )
         except Exception as e:
-            self._record(model_id, "Images API 生成", {
-                "success": False, "latency_ms": round((time.time() - start) * 1000, 2),
-                "error": f"{type(e).__name__}: {str(e)[:300]}",
-            })
+            self._record(
+                model_id,
+                "Images API 生成",
+                {
+                    "success": False,
+                    "latency_ms": round((time.time() - start) * 1000, 2),
+                    "error": f"{type(e).__name__}: {str(e)[:300]}",
+                },
+            )
 
     def test_streaming(self, model):
         model_id = model["id"]
@@ -259,16 +291,28 @@ class APITester:
                     chunks.append(chunk.choices[0].delta.content)
             latency = (time.time() - start) * 1000
             ttft = ((first_token_time - start) * 1000) if first_token_time else latency
-            self._record(model_id, f"流式输出(TTFT:{ttft:.0f}ms)", {
-                "success": True, "latency_ms": round(latency, 2),
-                "content": "".join(chunks),
-                "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0,
-            })
+            self._record(
+                model_id,
+                f"流式输出(TTFT:{ttft:.0f}ms)",
+                {
+                    "success": True,
+                    "latency_ms": round(latency, 2),
+                    "content": "".join(chunks),
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                },
+            )
         except Exception as e:
-            self._record(model_id, "流式输出", {
-                "success": False, "latency_ms": round((time.time() - start) * 1000, 2),
-                "error": f"{type(e).__name__}: {str(e)[:300]}",
-            })
+            self._record(
+                model_id,
+                "流式输出",
+                {
+                    "success": False,
+                    "latency_ms": round((time.time() - start) * 1000, 2),
+                    "error": f"{type(e).__name__}: {str(e)[:300]}",
+                },
+            )
 
     def test_concurrent(self, model, num_requests=5):
         model_id = model["id"]
@@ -280,8 +324,11 @@ class APITester:
             s = time.time()
             try:
                 resp = self.client.chat.completions.create(model=model_id, messages=messages, max_tokens=128)
-                return {"success": True, "latency_ms": round((time.time() - s) * 1000, 2),
-                        "tokens": resp.usage.total_tokens if resp.usage else 0}
+                return {
+                    "success": True,
+                    "latency_ms": round((time.time() - s) * 1000, 2),
+                    "tokens": resp.usage.total_tokens if resp.usage else 0,
+                }
             except Exception as e:
                 return {"success": False, "latency_ms": round((time.time() - s) * 1000, 2), "error": str(e)[:200]}
 
@@ -293,18 +340,23 @@ class APITester:
         success_count = sum(1 for r in results if r["success"])
         latencies = [r["latency_ms"] for r in results if r["success"]]
         avg = sum(latencies) / len(latencies) if latencies else 0
-        summary = (f"并发{num_requests}: 成功{success_count}/{num_requests} | "
-                   f"总耗时{total_time:.0f}ms | avg={avg:.0f}ms")
-        self._record(model_id, f"并发测试(x{num_requests})", {
-            "success": success_count == num_requests,
-            "latency_ms": round(total_time, 2),
-            "content": summary,
-            "prompt_tokens": 0, "completion_tokens": 0,
-            "total_tokens": sum(r.get("tokens", 0) for r in results),
-            "error": "" if success_count == num_requests else
-                     f"{num_requests - success_count} 个失败: " +
-                     "; ".join(r.get("error", "")[:100] for r in results if not r["success"]),
-        })
+        summary = f"并发{num_requests}: 成功{success_count}/{num_requests} | 总耗时{total_time:.0f}ms | avg={avg:.0f}ms"
+        self._record(
+            model_id,
+            f"并发测试(x{num_requests})",
+            {
+                "success": success_count == num_requests,
+                "latency_ms": round(total_time, 2),
+                "content": summary,
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": sum(r.get("tokens", 0) for r in results),
+                "error": ""
+                if success_count == num_requests
+                else f"{num_requests - success_count} 个失败: "
+                + "; ".join(r.get("error", "")[:100] for r in results if not r["success"]),
+            },
+        )
 
     def run_all(self):
         print("=" * 60)
@@ -363,7 +415,9 @@ class APITester:
                     note = r.error_message[:60].replace("|", "/").replace("\n", " ")
                 if r.image_saved:
                     note = "图片已保存"
-                f.write(f"| {r.model_id} | {r.test_name} | {status} | {r.latency_ms:.0f} | {r.total_tokens} | {note} |\n")
+                f.write(
+                    f"| {r.model_id} | {r.test_name} | {status} | {r.latency_ms:.0f} | {r.total_tokens} | {note} |\n"
+                )
 
             failures = [r for r in self.results if not r.success]
             if failures:

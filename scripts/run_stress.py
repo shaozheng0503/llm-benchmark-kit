@@ -19,7 +19,6 @@ from common import (
     percentile,
 )
 
-
 TIER_CONFIG = {
     "low": {"concurrency": 5, "requests": 10, "max_tokens": 128},
     "medium": {"concurrency": 20, "requests": 40, "max_tokens": 160},
@@ -131,7 +130,9 @@ def build_markdown(records: list[StressRecord], models: list[str], tiers: list[s
         "|------|------|------|--------|--------|-----|---------|---------|---------|----------|",
     ]
     for item in records:
-        success_rate = f"{item.success}/{item.requests} ({(item.success / item.requests * 100) if item.requests else 0:.1f}%)"
+        success_rate = (
+            f"{item.success}/{item.requests} ({(item.success / item.requests * 100) if item.requests else 0:.1f}%)"
+        )
         lines.append(
             f"| {item.model} | {item.tier} | {item.concurrency} | {item.requests} | {success_rate} | "
             f"{item.rps} | {item.avg_latency_ms:.0f} | {item.p95_latency_ms:.0f} | {item.p99_latency_ms:.0f} | {item.avg_ttft_ms:.0f} |"

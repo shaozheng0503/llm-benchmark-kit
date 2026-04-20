@@ -3,7 +3,17 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 
-from common import RAW_DIR, REPORTS_DIR, ReportArtifact, dump_json, dump_text, ensure_project_dirs, get_base_host, get_http_client, now_ts
+from common import (
+    RAW_DIR,
+    REPORTS_DIR,
+    ReportArtifact,
+    dump_json,
+    dump_text,
+    ensure_project_dirs,
+    get_base_host,
+    get_http_client,
+    now_ts,
+)
 
 
 def build_markdown(models: list[dict], elapsed_ms: float) -> str:

@@ -4,7 +4,9 @@
 > 所有敏感配置通过环境变量注入，报告与原始数据默认不入库，可直接用于私有化或对外发布。
 
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![python](https://img.shields.io/badge/python-3.10+-blue)](#)
+[![python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
+[![lint](https://img.shields.io/badge/lint-ruff-orange)](pyproject.toml)
+[![tests](https://img.shields.io/badge/tests-pytest-blue)](tests/)
 
 ---
 
@@ -31,9 +33,11 @@
 ### 1. 准备环境
 
 ```bash
-git clone https://github.com/<your-org>/llm-benchmark-kit.git
+git clone https://github.com/shaozheng0503/llm-benchmark-kit.git
 cd llm-benchmark-kit
 python3 -m pip install -r requirements.txt
+# 或者安装为可编辑包（包含 ruff / pytest 等 dev 工具）：
+python3 -m pip install -e ".[dev]"
 ```
 
 ### 2. 配置密钥
@@ -71,6 +75,18 @@ python3 scripts/run_authenticity.py
 python3 scripts/build_summary.py
 ```
 
+或者使用 `Makefile` 的一键入口：
+
+```bash
+make discover     # 步骤 1
+make cases        # 步骤 2
+make stress       # 步骤 3（低档位）
+make authenticity # 步骤 4
+make summary      # 步骤 5
+make full         # 上述五步串行跑完
+make help         # 查看全部可用任务
+```
+
 产物：`reports/cases/`、`reports/stress/`、`reports/authenticity/`、`reports/summary/`，每次都会同时输出 JSON 与 Markdown。
 
 ---
@@ -80,8 +96,11 @@ python3 scripts/build_summary.py
 ```
 llm-benchmark-kit/
 ├── README.md                      # 本文件
+├── CONTRIBUTING.md                # 贡献指南
 ├── LICENSE                        # MIT
-├── requirements.txt               # 依赖
+├── pyproject.toml                 # 包元数据 / ruff / pytest 配置
+├── requirements.txt               # 运行时依赖
+├── Makefile                       # 常用任务：install/cases/stress/lint/test/...
 ├── .env.example                   # 环境变量模板
 ├── .gitignore                     # 屏蔽 .env / reports / data 等
 ├── config/
@@ -106,7 +125,9 @@ llm-benchmark-kit/
 │       ├── authenticity_report_sample.md
 │       └── summary_report_sample.md
 ├── docs/
-│   └── architecture.md            # 架构与扩展指南
+│   ├── architecture.md            # 架构与扩展指南
+│   └── ci-sample/github-actions.yml   # 可直接启用的 GitHub Actions 样例
+├── tests/                         # pytest：用例配置校验 + 脚本 AST 解析
 ├── data/raw/                      # discover_models 落地的 models_latest.json
 └── reports/                       # 运行时生成的报告与 JSON
     ├── cases/
@@ -191,6 +212,18 @@ llm-benchmark-kit/
 - [summary_report_sample.md](examples/reports/summary_report_sample.md) — 综合汇总
 
 ---
+
+## 开发与贡献
+
+```bash
+python3 -m pip install -e ".[dev]"
+make lint            # ruff check
+make format          # ruff format + --fix
+make test            # pytest (27 项)
+make help            # 查看所有可用任务
+```
+
+想启用 GitHub Actions CI：把 `docs/ci-sample/github-actions.yml` 复制到 `.github/workflows/ci.yml` 即可，会在 Python 3.10 / 3.11 / 3.12 下跑 `ruff check` + `ruff format --check` + `pytest`（需要 `gh auth refresh -s workflow` 后再 push）。详细贡献指引见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 扩展指引
 

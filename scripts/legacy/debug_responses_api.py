@@ -12,12 +12,12 @@ Responses API 调试脚本 (legacy)
   python scripts/legacy/debug_responses_api.py
 """
 
-import os
 import json
+import os
 import traceback
+
 import httpx
 from openai import OpenAI
-
 
 BASE_URL = os.getenv("LLM_API_BASE", "").rstrip("/")
 API_KEY = os.getenv("LLM_API_KEY", "")
@@ -85,6 +85,7 @@ def test_1():
         messages=[{"role": "user", "content": "Say hello."}],
     )
 
+
 attempt("1 - Standard chat completions (minimal params)", test_1)
 
 
@@ -97,6 +98,7 @@ def test_2():
         messages=[{"role": "user", "content": "Say hello."}],
         stream=True,
     )
+
 
 attempt("2 - Chat completions with stream=True", test_2)
 
@@ -111,6 +113,7 @@ def test_3():
         # explicitly no temperature, no top_p, no anything extra
     )
 
+
 attempt("3 - Chat completions without temperature (same as #1, confirming)", test_3)
 
 
@@ -123,6 +126,7 @@ def test_4():
         messages=[{"role": "user", "content": "Say hello."}],
         response_format={"type": "text"},
     )
+
 
 attempt("4 - Chat completions with response_format={'type':'text'}", test_4)
 
@@ -147,6 +151,7 @@ def test_5():
     print(f"  Body: {resp.text}")
     resp.raise_for_status()
     return resp.json()
+
 
 attempt("5 - Responses API (/v1/responses) via raw HTTP", test_5)
 
@@ -173,6 +178,7 @@ def test_6a():
     resp.raise_for_status()
     return resp.json()
 
+
 attempt("6a - reasoning_effort=low (raw HTTP)", test_6a)
 
 
@@ -197,6 +203,7 @@ def test_6b():
     print(f"  Body: {resp.text}")
     resp.raise_for_status()
     return resp.json()
+
 
 attempt("6b - reasoning_effort=medium (raw HTTP)", test_6b)
 
@@ -223,6 +230,7 @@ def test_6c():
     resp.raise_for_status()
     return resp.json()
 
+
 attempt("6c - reasoning_effort=high (raw HTTP)", test_6c)
 
 
@@ -234,6 +242,7 @@ def test_7():
         model=MODEL,
         messages=[{"role": "system", "content": "You are a helpful assistant. Say hello."}],
     )
+
 
 attempt("7 - System message only, no user message", test_7)
 
@@ -247,6 +256,7 @@ def test_8a():
         messages=[{"role": "user", "content": "Say hello."}],
         max_tokens=50,
     )
+
 
 attempt("8a - max_tokens=50", test_8a)
 
@@ -272,6 +282,7 @@ def test_8b():
     print(f"  Body: {resp.text}")
     resp.raise_for_status()
     return resp.json()
+
 
 attempt("8b - max_completion_tokens=50 (raw HTTP)", test_8b)
 
@@ -302,6 +313,7 @@ def test_9():
         print(f"  Body: {resp.text}")
     resp.raise_for_status()
     return "done"
+
 
 attempt("BONUS 9 - List models (check gpt-5.4-pro exists)", test_9)
 
@@ -335,6 +347,7 @@ def test_10():
     resp.raise_for_status()
     return "done"
 
+
 attempt("BONUS 10 - stream + reasoning_effort=low + max_completion_tokens", test_10)
 
 
@@ -362,6 +375,7 @@ def test_11():
     print(f"  Body: {resp.text}")
     resp.raise_for_status()
     return resp.json()
+
 
 attempt("BONUS 11 - developer role + max_completion_tokens (o-series style)", test_11)
 

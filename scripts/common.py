@@ -3,14 +3,13 @@ from __future__ import annotations
 import json
 import os
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import httpx
 from openai import OpenAI
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = PROJECT_ROOT / "config"
@@ -158,10 +157,7 @@ def call_chat_completion(
         message = choice.message
         usage = response.usage
         content = (
-            message.content
-            or getattr(message, "reasoning_content", None)
-            or getattr(message, "reasoning", None)
-            or ""
+            message.content or getattr(message, "reasoning_content", None) or getattr(message, "reasoning", None) or ""
         )
         return {
             "success": True,
@@ -187,12 +183,7 @@ def call_chat_completion(
         if not chunk.choices:
             continue
         delta = chunk.choices[0].delta
-        piece = (
-            delta.content
-            or getattr(delta, "reasoning_content", None)
-            or getattr(delta, "reasoning", None)
-            or ""
-        )
+        piece = delta.content or getattr(delta, "reasoning_content", None) or getattr(delta, "reasoning", None) or ""
         if piece and first_token_at is None:
             first_token_at = time.time()
         if piece:

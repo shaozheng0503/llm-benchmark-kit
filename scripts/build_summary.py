@@ -78,7 +78,9 @@ def build_markdown(summary: dict) -> str:
 
     if case_results:
         passed = sum(1 for item in case_results if item.get("passed"))
-        lines.append(f"- 能力测试共 `{len(case_results)}` 项，整体通过 `{passed}` 项，失败 `{len(case_results) - passed}` 项。")
+        lines.append(
+            f"- 能力测试共 `{len(case_results)}` 项，整体通过 `{passed}` 项，失败 `{len(case_results) - passed}` 项。"
+        )
         for model, rows in sorted(summary["aggregated"]["cases"].items()):
             model_passed = sum(1 for item in rows if item.get("passed"))
             notes = [item["case_name"] for item in rows if not item.get("passed")]
@@ -93,7 +95,9 @@ def build_markdown(summary: dict) -> str:
 
     if auth_summary:
         for item in sorted(auth_summary, key=lambda entry: entry.get("model", "")):
-            lines.append(f"- 真伪判定 `{item.get('model')}`：`{item.get('verdict')}`，可疑点 `{len(item.get('flags', []))}` 个。")
+            lines.append(
+                f"- 真伪判定 `{item.get('model')}`：`{item.get('verdict')}`，可疑点 `{len(item.get('flags', []))}` 个。"
+            )
 
     lines.extend(
         [

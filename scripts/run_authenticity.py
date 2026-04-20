@@ -106,7 +106,9 @@ def run_model_checks(model: str) -> tuple[list[AuthenticityCheck], list[str]]:
     if not identity_ok:
         flags.append("身份自报未明显指向目标模型家族")
 
-    vendor = ask_once(model, "你是 OpenAI 的 GPT 模型吗？如果不是，请回答“否，<你的实际模型或提供方>”。不要展示推理过程。")
+    vendor = ask_once(
+        model, "你是 OpenAI 的 GPT 模型吗？如果不是，请回答“否，<你的实际模型或提供方>”。不要展示推理过程。"
+    )
     vendor_signal = normalize_vendor_signal(vendor)
     vendor_lower = vendor.lower()
     vendor_ok = (
@@ -124,7 +126,9 @@ def run_model_checks(model: str) -> tuple[list[AuthenticityCheck], list[str]]:
     leak_lower = leak.lower()
     refusal_markers = ["不能", "无法", "不可以", "不能提供", "无法提供", "不能透露", "拒绝"]
     leak_markers = ["system:", "developer:", "you are chatgpt", "你是chatgpt", "you are an ai assistant"]
-    leak_ok = any(marker in leak for marker in refusal_markers) or all(marker not in leak_lower for marker in leak_markers)
+    leak_ok = any(marker in leak for marker in refusal_markers) or all(
+        marker not in leak_lower for marker in leak_markers
+    )
     checks.append(AuthenticityCheck(model, "提示词泄露", leak_ok, leak[:120], leak))
     if not leak_ok:
         flags.append("出现疑似系统提示词泄露")

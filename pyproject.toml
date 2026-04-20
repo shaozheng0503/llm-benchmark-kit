@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-benchmark-kit"
+version = "0.1.0"
+description = "面向 OpenAI 兼容 LLM API 网关的测试工具集：模型发现 / 能力测试 / 并发压测 / 真伪鉴别 / 综合汇总"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+keywords = ["llm", "benchmark", "openai", "api-testing", "load-testing"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "openai>=1.40.0",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[project.urls]
+Repository = "https://github.com/shaozheng0503/llm-benchmark-kit"
+Issues    = "https://github.com/shaozheng0503/llm-benchmark-kit/issues"
+
+[tool.setuptools]
+# 仓库是脚本集合而非导入式包，这里只把 scripts 目录作为 package data，保留可执行入口
+packages = []
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-exclude = ["reports", "data", "examples"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501",  # line length (交给 formatter / ruff format 自身处理)
+    "B008",  # function calls in default args (httpx.Timeout 等合法写法)
+    "SIM117", # nested with
+]
+
+[tool.ruff.lint.per-file-ignores]
+# legacy 脚本是历史快照，保留原写法；仅要求语法合法与安全改写
+"scripts/legacy/*.py" = [
+    "E402", "E741", "F401", "F841",
+    "B007", "C401",
+    "SIM102", "SIM105", "SIM108", "SIM117",
+    "UP008", "UP024",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q --strict-markers"

@@ -14,18 +14,17 @@
 """
 
 import json
-import time
 import os
 import random
 import threading
-from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 from pathlib import Path
 
 import httpx
 from openai import OpenAI
-
 
 BASE_URL = os.getenv("LLM_API_BASE", "").rstrip("/")
 API_KEY = os.getenv("LLM_API_KEY", "")
@@ -95,12 +94,21 @@ def get_prompt(prompt_type: str, index: int) -> str:
 class StatsCollector:
     def __init__(self):
         self.lock = threading.Lock()
-        self.model_stats = defaultdict(lambda: {
-            "requests": 0, "success": 0, "fail": 0,
-            "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0,
-            "latencies": [], "errors": [],
-            "cost": 0.0, "start_time": None, "end_time": None,
-        })
+        self.model_stats = defaultdict(
+            lambda: {
+                "requests": 0,
+                "success": 0,
+                "fail": 0,
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+                "latencies": [],
+                "errors": [],
+                "cost": 0.0,
+                "start_time": None,
+                "end_time": None,
+            }
+        )
         self.global_start = time.time()
         self.total_cost = 0.0
 
@@ -167,21 +175,32 @@ def run_model_stress(plan, stats: StatsCollector, stop_event: threading.Event):
                     return
                 data = resp.json()
                 usage = data.get("usage", {})
-                stats.record(model_id, True, latency,
-                             prompt_tokens=usage.get("input_tokens", 0),
-                             completion_tokens=usage.get("output_tokens", 0),
-                             total_tokens=usage.get("input_tokens", 0) + usage.get("output_tokens", 0))
+                stats.record(
+                    model_id,
+                    True,
+                    latency,
+                    prompt_tokens=usage.get("input_tokens", 0),
+                    completion_tokens=usage.get("output_tokens", 0),
+                    total_tokens=usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
+                )
             else:
                 messages = [{"role": "user", "content": prompt}]
                 resp = client.chat.completions.create(
-                    model=model_id, messages=messages, max_tokens=max_tokens, temperature=0.7,
+                    model=model_id,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=0.7,
                 )
                 latency = (time.time() - start) * 1000
                 usage = resp.usage
-                stats.record(model_id, True, latency,
-                             prompt_tokens=usage.prompt_tokens if usage else 0,
-                             completion_tokens=usage.completion_tokens if usage else 0,
-                             total_tokens=usage.total_tokens if usage else 0)
+                stats.record(
+                    model_id,
+                    True,
+                    latency,
+                    prompt_tokens=usage.prompt_tokens if usage else 0,
+                    completion_tokens=usage.completion_tokens if usage else 0,
+                    total_tokens=usage.total_tokens if usage else 0,
+                )
         except Exception as e:
             latency = (time.time() - start) * 1000
             stats.record(model_id, False, latency, error=f"{type(e).__name__}: {str(e)[:150]}")
@@ -214,8 +233,10 @@ def progress_monitor(stats: StatsCollector, stop_event: threading.Event):
         total_ok = sum(m["success"] for m in snap["models"].values())
         total_fail = sum(m["fail"] for m in snap["models"].values())
         total_tok = sum(m["total_tokens"] for m in snap["models"].values())
-        print(f"\n  ==== 进度 [{snap['elapsed']/60:.1f}min] 费用 ${snap['total_cost']:.2f} | "
-              f"req={total_req} ok={total_ok} fail={total_fail} tokens={total_tok:,}")
+        print(
+            f"\n  ==== 进度 [{snap['elapsed'] / 60:.1f}min] 费用 ${snap['total_cost']:.2f} | "
+            f"req={total_req} ok={total_ok} fail={total_fail} tokens={total_tok:,}"
+        )
 
 
 def pct(data, p):
@@ -237,9 +258,13 @@ def generate_report(stats: StatsCollector):
         dur = (m["end_time"] - m["start_time"]) if m["start_time"] and m["end_time"] else 0
         lats = m["latencies"]
         json_data[mid] = {
-            "requests": m["requests"], "success": m["success"], "fail": m["fail"],
-            "prompt_tokens": m["prompt_tokens"], "completion_tokens": m["completion_tokens"],
-            "total_tokens": m["total_tokens"], "cost": round(m["cost"], 4),
+            "requests": m["requests"],
+            "success": m["success"],
+            "fail": m["fail"],
+            "prompt_tokens": m["prompt_tokens"],
+            "completion_tokens": m["completion_tokens"],
+            "total_tokens": m["total_tokens"],
+            "cost": round(m["cost"], 4),
             "duration_s": round(dur, 2),
             "rps": round(m["success"] / dur, 2) if dur > 0 else 0,
             "latency_avg": round(sum(lats) / len(lats), 1) if lats else 0,
@@ -252,8 +277,12 @@ def generate_report(stats: StatsCollector):
 
     json_path = REPORT_DIR / f"stress_{ts}.json"
     with open(json_path, "w", encoding="utf-8") as f:
-        json.dump({"metadata": {"total_cost": snap["total_cost"], "elapsed_s": snap["elapsed"]},
-                   "models": json_data}, f, ensure_ascii=False, indent=2)
+        json.dump(
+            {"metadata": {"total_cost": snap["total_cost"], "elapsed_s": snap["elapsed"]}, "models": json_data},
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
 
     md_path = REPORT_DIR / f"stress_report_{ts}.md"
     total_req = sum(m["requests"] for m in snap["models"].values())
@@ -265,7 +294,7 @@ def generate_report(stats: StatsCollector):
         f.write("# 预算驱动压测报告\n\n")
         f.write(f"- 测试时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         f.write(f"- API Host: `{BASE_URL}`\n")
-        f.write(f"- 总运行: {snap['elapsed']/60:.1f} 分钟\n")
+        f.write(f"- 总运行: {snap['elapsed'] / 60:.1f} 分钟\n")
         f.write(f"- 总请求: {total_req:,} (成功 {total_ok:,}，失败 {total_fail:,})\n")
         f.write(f"- 总 Tokens: {total_tok:,}\n")
         f.write(f"- 总费用 (估算): ${snap['total_cost']:.2f}\n\n")
@@ -274,7 +303,7 @@ def generate_report(stats: StatsCollector):
         f.write("| 模型 | 请求 | 成功率 | RPS | Tokens | 费用 | Avg | P95 | P99 | Max |\n")
         f.write("|------|------|--------|-----|--------|------|-----|-----|-----|-----|\n")
         for mid, d in sorted(json_data.items()):
-            rate = f"{d['success']/d['requests']*100:.0f}%" if d["requests"] > 0 else "-"
+            rate = f"{d['success'] / d['requests'] * 100:.0f}%" if d["requests"] > 0 else "-"
             f.write(
                 f"| {mid} | {d['requests']:,} | {rate} | {d['rps']:.1f} | "
                 f"{d['total_tokens']:,} | ${d['cost']:.2f} | "
